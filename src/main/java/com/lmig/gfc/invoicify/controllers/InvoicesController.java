@@ -1,5 +1,8 @@
 package com.lmig.gfc.invoicify.controllers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,18 +11,39 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.lmig.gfc.invoicify.models.BillingRecord;
+import com.lmig.gfc.invoicify.models.Company;
 import com.lmig.gfc.invoicify.models.Invoice;
+import com.lmig.gfc.invoicify.models.InvoiceLineItem;
+import com.lmig.gfc.invoicify.models.User;
+import com.lmig.gfc.invoicify.services.BillingRecordRepository;
+import com.lmig.gfc.invoicify.services.CompanyRepository;
+import com.lmig.gfc.invoicify.services.InvoiceLineItemRepository;
+import com.lmig.gfc.invoicify.services.InvoiceRepository;
 
 @Controller
 @RequestMapping("/invoices")
 public class InvoicesController {
+	
+	private CompanyRepository companyRepo;
+	private BillingRecordRepository billingRecordRepo;
+	private InvoiceRepository invoiceRepo;
+	
+	public InvoicesController(CompanyRepository companyRepo, BillingRecordRepository billingRecordRepo, InvoiceRepository invoiceRepo, InvoiceLineItemRepository invoiceLineItemRepo) {
+		this.companyRepo = companyRepo;
+		this.billingRecordRepo = billingRecordRepo;
+		this.invoiceRepo = invoiceRepo;
+	}
 
 	@GetMapping("")
 	public ModelAndView showInvoices() {
 		ModelAndView mv = new ModelAndView("invoices/list");
 		
 		// Get all the invoices and add them to the model and view with the key "invoices"
+		mv.addObject("invoices", invoiceRepo.findAll());
+		
 		// Add a key to the model and view named "showTable" which should be true if there's more than one invoice and false if there are zero invoices
+		mv.addObject("showTable", invoiceRepo.count()>=1);
 		
 		return mv;
 	}
@@ -29,6 +53,7 @@ public class InvoicesController {
 		ModelAndView mv = new ModelAndView("invoices/clients");
 		
 		// Get all the clients and add them to the model and view with the key "clients"
+		mv.addObject("clients" , companyRepo.findAll());
 		
 		return mv;
 	}
@@ -38,7 +63,13 @@ public class InvoicesController {
 		ModelAndView mv = new ModelAndView("invoices/billing-records-list");
 		
 		// Get all the billing records for the specified client that have no associated invoice line item and add them with the key "records"
+		Company client = companyRepo.findOne(clientId);
+		List<BillingRecord> records = billingRecordRepo.findByClientAndLineItemIsNull(client);
+		mv.addObject("recordsEmpty", records.isEmpty());
+		mv.addObject("records", records);
+		mv.addObject("clientName", client.getName());
 		// Add the client id to the model and view with the key "clientId"
+		mv.addObject("clientId", clientId);
 		
 		return mv;
 	}
@@ -46,20 +77,42 @@ public class InvoicesController {
 	@PostMapping("/clients/{clientId}")
 	public String createInvoice(Invoice invoice, @PathVariable Long clientId, long[] recordIds, Authentication auth) {
 		// Get the user from the auth.getPrincipal() method
+		User user = (User) auth.getPrincipal();
+		
 		// Find all billing records in the recordIds array
+		List<BillingRecord> billingRecords = new ArrayList<BillingRecord>();
+		for (long id : recordIds) {
+			billingRecords.add(billingRecordRepo.findOne(id));
+		}
 		
 		// Create a new list that can hold invoice line items
+		List<InvoiceLineItem> invoiceLineItems = new ArrayList<InvoiceLineItem>();
+		
 		// For each billing record in the records found from recordIds
 		//   Create a new invoice line item
 		//   Set the billing record on the invoice line item
 		//   Set the created by to the user
 		//   Set the invoice on the invoice line item
 		//   Add the invoice line item to the list of invoice line items
+		for(BillingRecord billingRecord : billingRecords) {
+			InvoiceLineItem invoiceLineItem = new InvoiceLineItem();
+			invoiceLineItem.setBillingRecord(billingRecord);
+			invoiceLineItem.setCreatedBy(user);
+			invoiceLineItem.setInvoice(invoice);
+			invoiceLineItems.add(invoiceLineItem);
+		}
 		
 		// Set the list of line items on the invoice
+		invoice.setInvoiceLineItems(invoiceLineItems);
+		
 		// Set the created by on the invoice to the user
+		invoice.setCreatedBy(user);
+		
 		// Set the client on the invoice to the company identified by clientId
+		invoice.setCompany(companyRepo.findOne(clientId));
+		
 		// Save the invoice to the database
+		invoiceRepo.save(invoice);
 		
 		return "redirect:/invoices";
 	}

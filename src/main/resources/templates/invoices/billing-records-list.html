@@ -47,8 +47,13 @@
 	    </tbody>  
 	  </table>
 	
-	
+	{{^recordsEmpty}}
 	  <button>Create the invoice</button>
+	{{/recordsEmpty}}
+	
+	{{#recordsEmpty}}
+		There are currently no Billing Records for {{ clientName }}.
+	{{/recordsEmpty}}
 	  
 	  <input type="hidden"
 	         name="{{ _csrf.parameterName }}"
