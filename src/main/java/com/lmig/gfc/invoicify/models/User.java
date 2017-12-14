@@ -22,7 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Table(name="invoicify_user")
 public class User implements UserDetails {
 
-	//private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

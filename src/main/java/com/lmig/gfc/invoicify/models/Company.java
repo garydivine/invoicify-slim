@@ -21,8 +21,8 @@ public class Company {
 	private String name;
 	
 	// This needs a list of invoice objects named invoices as one-to-many relationship mapped by "company"
-	//@ManyToMany(mappedBy = "company")
-	//private List<Invoice> invoices;
+	@ManyToMany(mappedBy = "company")
+	private List<Invoice> invoices;
 	
 	public Company() {}
 	
@@ -49,12 +49,12 @@ public class Company {
 		this.name = name;
 	}
 
-//	public List<Invoice> getInvoices() {
-//		return invoices;
-//	}
-//
-//	public void setInvoices(List<Invoice> invoices) {
-//		this.invoices = invoices;
-//	}
+	public List<Invoice> getInvoices() {
+		return invoices;
+	}
+
+	public void setInvoices(List<Invoice> invoices) {
+		this.invoices = invoices;
+	}
 	
 }
