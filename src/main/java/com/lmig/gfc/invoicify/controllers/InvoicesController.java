@@ -79,10 +79,7 @@ public class InvoicesController {
 		User user = (User) auth.getPrincipal();
 		
 		// Find all billing records in the recordIds array
-		List<BillingRecord> billingRecords = new ArrayList<BillingRecord>();
-		for (long id : recordIds) {
-			billingRecords.add(billingRecordRepo.findOne(id));
-		}
+		List<BillingRecord> billingRecords = billingRecordRepo.findByIdIn(recordIds);
 		
 		// Create a new list that can hold invoice line items
 		List<InvoiceLineItem> invoiceLineItems = new ArrayList<InvoiceLineItem>();
