@@ -14,7 +14,7 @@ import com.lmig.gfc.invoicify.services.BillingRecordRepository;
 import com.lmig.gfc.invoicify.services.CompanyRepository;
 
 @Controller
-@RequestMapping("/billing-records/flat-fees")
+@RequestMapping("/billing-records/flat-fees") 
 public class FlatFeeBillingRecordController {
 	
 	private CompanyRepository companyRepo;
@@ -26,11 +26,11 @@ public class FlatFeeBillingRecordController {
 	}
 
 	@PostMapping("")
-	public ModelAndView create(FlatFeeBillingRecord record, long clientId, Authentication auth) {
+	public ModelAndView create(FlatFeeBillingRecord record, String clientId, Authentication auth) {
 		// Get the user from the auth.getPrincipal() method
 		User user = (User) auth.getPrincipal();
 		// Find the client using the client id
-		Company client = companyRepo.getOne(clientId);
+		Company client = companyRepo.getOne(Long.parseLong(clientId));
 		// Set the client on the record
 		record.setClient(client);
 		// Set the user on the record for the created by property
